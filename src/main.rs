@@ -7,7 +7,7 @@ fn main() {
     for stream in listener.incoming() {
         match stream {
             Ok(mut stream) => {
-                let response = format!(r"HTTP/1.1 200 OK\r\n\r\n");
+                let response = format!("HTTP/1.1 200 OK\r\n\r\n");
 
                 stream.write_all(response.as_bytes()).unwrap();
             },
