@@ -11,7 +11,9 @@ fn main() {
 
                 stream.write_all(response.as_bytes()).unwrap();
             },
-            Err(_) => println!("OOF"),
+            Err(e) => {
+                println!("error: {}", e);
+            }
         }
     }
 }
