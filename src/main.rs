@@ -21,6 +21,7 @@ fn handle_client(mut stream: TcpStream) {
 
     let response = match &request.resource {
         Resource::Path(path) => match path.as_str() {
+            "/" => "HTTP/1.1 200 OK\r\n\r\n",
             "/index.html" => "HTTP/1.1 200 OK\r\n\r\n",
             _ => "HTTP/1.1 404 Not Found\r\n\r\n",
         },
