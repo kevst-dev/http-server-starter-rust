@@ -1,0 +1,7 @@
+# list here all the events and the commands that it should execute
+# TIP: include '.watch.yaml' in your .git/info/exclude to ignore it.
+
+- name: run http server
+  run: cargo run
+  change: "src/**"
+  ignore: "tests/**"
