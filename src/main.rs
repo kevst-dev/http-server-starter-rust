@@ -10,6 +10,12 @@ use http_request::{HttpRequest, Resource};
 mod parse_url;
 use parse_url::ParseUrl;
 
+pub mod http_response;
+use http_response::HttpResponse;
+
+mod router;
+use router::Router;
+
 fn handle_client(mut stream: TcpStream) {
     let mut reader = BufReader::new(&stream);
 
@@ -19,15 +25,7 @@ fn handle_client(mut stream: TcpStream) {
 
     println!("request: {:?}", request);
 
-    let response = match &request.resource {
-        Resource::Path(path) => match path.as_str() {
-            "/" => "HTTP/1.1 200 OK\r\n\r\n",
-            "/index.html" => "HTTP/1.1 200 OK\r\n\r\n",
-            _ => "HTTP/1.1 404 Not Found\r\n\r\n",
-        },
-    };
-
-    stream.write_all(response.as_bytes()).unwrap();
+    Router::route(request, &mut stream);
 }
 
 fn main() {

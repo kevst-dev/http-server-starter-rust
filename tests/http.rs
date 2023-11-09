@@ -1,6 +1,7 @@
 use std::process::Command;
 
-use http_server_starter_rust::http_request::{HttpMethod, HttpRequest};
+use http_server_starter_rust::http_request::{HttpMethod, HttpRequest, Resource};
+use http_server_starter_rust::http_response::{HttpResponse};
 
 fn define_curl_cli(args: Vec<&str>) -> Command {
     let mut curl_command = Command::new("curl");
@@ -37,8 +38,8 @@ fn format_stdout(output: String) -> (String, String) {
 }
 
 #[test]
-fn test_http_status_code_200() {
-    let args = vec!["http://localhost:4221/index.html"];
+fn test_http_status_code_200_none_path() {
+    let args = vec!["http://localhost:4221/"];
     let mut curl_cli = define_curl_cli(args);
 
     let output = curl_cli.output().unwrap();
@@ -48,5 +49,36 @@ fn test_http_status_code_200() {
     let request = HttpRequest::from(request.clone());
 
     assert_eq!(HttpMethod::Get, request.method);
-    assert_eq!("HTTP/1.1 200 OK\r\n", response);
+    assert!(response.contains("HTTP/1.1 200 OK"));
+}
+
+#[test]
+fn test_http_status_code_200_echo_path() {
+    let args = vec!["http://localhost:4221/echo/linux"];
+    let mut curl_cli = define_curl_cli(args);
+
+    let output = curl_cli.output().unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    let (request, response) = format_stdout(stderr.to_string());
+    let request = HttpRequest::from(request.clone());
+
+    assert_eq!(HttpMethod::Get, request.method);
+    assert_eq!(request.resource, Resource::Path("/echo/linux".to_string()));
+    assert!(response.contains("HTTP/1.1 200 OK"));
+}
+
+#[test]
+fn test_http_status_code_404() {
+    let args = vec!["-X", "POST","http://localhost:4221/data.xml"];
+    let mut curl_cli = define_curl_cli(args);
+
+    let output = curl_cli.output().unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    let (request, response) = format_stdout(stderr.to_string());
+    let request = HttpRequest::from(request.clone());
+
+    assert_eq!(HttpMethod::Post, request.method);
+    assert!(response.contains("HTTP/1.1 404 Not Found"));
 }
