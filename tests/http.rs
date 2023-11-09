@@ -90,4 +90,9 @@ remote: [stage-4] Test failed (try setting 'debug: true' in your codecrafters.ym
 remote:
 remote: View stage instructions: https://app.codecrafters.io/courses/http-server.
 remote:
+
+request: HttpRequest { method: Get, version: V1_1, resource: Path("/echo/Coo/dooby"), headers: {"Host": " localhost", "User-Agent": " Go-http-client/1.1", "Accept-Encoding": " gzip"}, msg_body: "" }
+remote: [stage-4] Expected content length 9, got 10
+remote: [stage-4] Test failed (try setting 'debug: true' in your codecrafters.yml to see more details)
+remote:
 */
