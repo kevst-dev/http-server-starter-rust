@@ -82,3 +82,12 @@ fn test_http_status_code_404() {
     assert_eq!(HttpMethod::Post, request.method);
     assert!(response.contains("HTTP/1.1 404 Not Found"));
 }
+
+/*
+remote: [your_program] request: HttpRequest { method: Get, version: V1_1, resource: Path("/echo/monkey/Coo-donkey"), headers: {"Host": " localhost", "User-Agent": " Go-http-client/1.1", "Accept-Encoding": " gzip"}, msg_body: "" }
+remote: [stage-4] Expected content length 17, got 6
+remote: [stage-4] Test failed (try setting 'debug: true' in your codecrafters.yml to see more details)
+remote:
+remote: View stage instructions: https://app.codecrafters.io/courses/http-server.
+remote:
+*/

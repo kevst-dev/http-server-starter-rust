@@ -17,7 +17,7 @@ impl Router {
                     match route[1] {
                         "echo" => {
                             let status_code = "200";
-                            let body = route[2];
+                            let body = s.clone().replace(&format!("{}/", route[1]), "");
                             let mut headers = HashMap::new();
                             headers.insert(
                                 "Content-type".to_string(), "text/plain".to_string()
