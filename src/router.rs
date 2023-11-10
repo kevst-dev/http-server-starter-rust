@@ -1,8 +1,10 @@
 use crate::http_request::{HttpMethod, HttpRequest};
 use crate::http_response::HttpResponse;
+use crate::response_handler;
+use crate::response_handler::Handler;
+
 
 use std::io::prelude::*;
-use std::collections::HashMap;
 
 pub struct Router;
 
@@ -10,83 +12,43 @@ impl Router {
     pub fn route(request: HttpRequest, stream: &mut impl Write) {
         match request.method {
             // If GET request
-            HttpMethod::Get => match &request.resource {
-                crate::http_request::Resource::Path(s) => {
-                    let route: Vec<&str> = s.split('/').collect();
-
-                    match route[1] {
-                        "echo" => {
-                            let status_code = "200";
-                            let body = s.clone().replace(&format!("/{}/", route[1]), "");
-                            let mut headers = HashMap::new();
-                            headers.insert(
-                                "Content-type".to_string(), "text/plain".to_string()
-                            );
-
-                            let response = HttpResponse::new(
-                                status_code,
-                                Some(headers),
-                                Some(body.to_string()),
-                            );
-
-                            let _ = response.send_response(stream);
-                        }
-                        // if '/'
-                        "" => {
-                            let status_code = "200";
-                            let body = "Todo en orden pero no conozco la ruta";
-                            let mut headers = HashMap::new();
-                            headers.insert(
-                                "Content-type".to_string(), "text/plain".to_string()
-                            );
-
-                            let response = HttpResponse::new(
-                                status_code,
-                                Some(headers),
-                                Some(body.to_string()),
-                            );
-
-                            let _ = response.send_response(stream);
-                        },
-                        _ => {
-                            let status_code = "404";
-                            let body = format!(
-                                "HTTP {:?} method not supported", request.method
-                            );
-                            let mut headers = HashMap::new();
-                            headers.insert(
-                                "Content-type".to_string(), "text/plain".to_string()
-                            );
-
-                            let response = HttpResponse::new(
-                                status_code,
-                                Some(headers),
-                                Some(body.to_string()),
-                            );
-
-                            let _ = response.send_response(stream);
-                        }
-                    }
-                }
-            },
+            HttpMethod::Get => {
+                Self.route_get(request, stream);
+            }
             _ => {
-                let status_code = "404";
-                let body = format!(
-                    "HTTP {:?} method not supported", request.method
-                );
-                let mut headers = HashMap::new();
-                headers.insert(
-                    "Content-type".to_string(), "text/plain".to_string()
-                );
-
-                let response = HttpResponse::new(
-                    status_code,
-                    Some(headers),
-                    Some(body.to_string()),
-                );
-
+                let response: HttpResponse =
+                    response_handler::PathNotFoundHandler::handle(&request);
                 let _ = response.send_response(stream);
             }
+        }
+    }
+
+    fn route_get(&self, request: HttpRequest, stream: &mut impl Write) {
+        match request.resource.path().as_str() {
+            "/" => {
+                let response: HttpResponse =
+                    response_handler::PathDefaultHandler::handle(&request);
+
+                let _ = response.send_response(stream);
+            },
+            "/echo" => {
+                let response: HttpResponse =
+                    response_handler::EchoHandler::handle(&request);
+
+                let _ = response.send_response(stream);
+            },
+
+            "/user-agent" => {
+                let response: HttpResponse =
+                    response_handler::UserAgentHandler::handle(&request);
+
+                let _ = response.send_response(stream);
+            },
+            _ => {
+                let response: HttpResponse =
+                    response_handler::PathNotFoundHandler::handle(&request);
+                let _ = response.send_response(stream);
+            },
         }
     }
 }

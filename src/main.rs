@@ -1,20 +1,13 @@
-use std::io::{BufRead, BufReader, Write};
+use std::io::{BufRead, BufReader};
 use std::net::{TcpListener, TcpStream};
 use std::str::FromStr;
 
 mod errors;
 
-pub mod http_request;
-use http_request::{HttpRequest, Resource};
+use http_rs::http_request::HttpRequest;
 
-mod parse_url;
-use parse_url::ParseUrl;
-
-pub mod http_response;
-use http_response::HttpResponse;
-
-mod router;
-use router::Router;
+use http_rs::parse_url::ParseUrl;
+use http_rs::router::Router;
 
 fn handle_client(mut stream: TcpStream) {
     let mut reader = BufReader::new(&stream);

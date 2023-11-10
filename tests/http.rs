@@ -1,7 +1,6 @@
 use std::process::Command;
 
-use http_server_starter_rust::http_request::{HttpMethod, HttpRequest, Resource};
-use http_server_starter_rust::http_response::{HttpResponse};
+use http_rs::http_request::{HttpMethod, HttpRequest};
 
 fn define_curl_cli(args: Vec<&str>) -> Command {
     let mut curl_command = Command::new("curl");
@@ -49,11 +48,15 @@ fn test_http_status_code_200_none_path() {
     let request = HttpRequest::from(request.clone());
 
     assert_eq!(HttpMethod::Get, request.method);
+    assert_eq!(request.resource.to_string(), "/");
+
     assert!(response.contains("HTTP/1.1 200 OK"));
+    assert!(response.contains("Content-type: text/plain"));
+    assert!(response.contains("Content-Length: 37"));
 }
 
 #[test]
-fn test_http_status_code_200_echo_path() {
+fn test_http_status_code_200_echo_path_1() {
     let args = vec!["http://localhost:4221/echo/linux"];
     let mut curl_cli = define_curl_cli(args);
 
@@ -64,13 +67,54 @@ fn test_http_status_code_200_echo_path() {
     let request = HttpRequest::from(request.clone());
 
     assert_eq!(HttpMethod::Get, request.method);
-    assert_eq!(request.resource, Resource::Path("/echo/linux".to_string()));
+    assert_eq!(request.resource.to_string(), "/echo/linux");
+
     assert!(response.contains("HTTP/1.1 200 OK"));
+    assert!(response.contains("Content-type: text/plain"));
+    assert!(response.contains("Content-Length: 5"));
+}
+
+#[test]
+fn test_http_status_code_200_echo_path_2() {
+    let args = vec!["http://localhost:4221/echo/monkey/Coo-donkey"];
+    let mut curl_cli = define_curl_cli(args);
+
+    let output = curl_cli.output().unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    let (request, response) = format_stdout(stderr.to_string());
+    let request = HttpRequest::from(request.clone());
+
+    assert_eq!(HttpMethod::Get, request.method);
+    assert_eq!(request.resource.to_string(), "/echo/monkey/Coo-donkey");
+
+    assert!(response.contains("HTTP/1.1 200 OK"));
+    assert!(response.contains("Content-type: text/plain"));
+    assert!(response.contains("Content-Length: 17"));
+}
+
+#[test]
+fn test_http_status_code_200_echo_path_3() {
+    let args = vec!["http://localhost:4221/echo/Coo/dooby"];
+    let mut curl_cli = define_curl_cli(args);
+
+    let output = curl_cli.output().unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    let (request, response) = format_stdout(stderr.to_string());
+    let request = HttpRequest::from(request.clone());
+
+    assert_eq!(HttpMethod::Get, request.method);
+    assert_eq!(request.resource.to_string(), "/echo/Coo/dooby");
+
+    assert!(response.contains("HTTP/1.1 200 OK"));
+    assert!(response.contains("Content-type: text/plain"));
+    assert!(response.contains("Content-Length: 9"));
 }
 
 #[test]
 fn test_http_status_code_404() {
-    let args = vec!["-X", "POST","http://localhost:4221/data.xml"];
+    let args = vec!["-X", "POST", "http://localhost:4221/data.xml"];
     let mut curl_cli = define_curl_cli(args);
 
     let output = curl_cli.output().unwrap();
@@ -81,18 +125,6 @@ fn test_http_status_code_404() {
 
     assert_eq!(HttpMethod::Post, request.method);
     assert!(response.contains("HTTP/1.1 404 Not Found"));
+    assert!(response.contains("Content-type: text/plain"));
+    assert!(response.contains("Content-Length: 39"));
 }
-
-/*
-remote: [your_program] request: HttpRequest { method: Get, version: V1_1, resource: Path("/echo/monkey/Coo-donkey"), headers: {"Host": " localhost", "User-Agent": " Go-http-client/1.1", "Accept-Encoding": " gzip"}, msg_body: "" }
-remote: [stage-4] Expected content length 17, got 6
-remote: [stage-4] Test failed (try setting 'debug: true' in your codecrafters.yml to see more details)
-remote:
-remote: View stage instructions: https://app.codecrafters.io/courses/http-server.
-remote:
-
-request: HttpRequest { method: Get, version: V1_1, resource: Path("/echo/Coo/dooby"), headers: {"Host": " localhost", "User-Agent": " Go-http-client/1.1", "Accept-Encoding": " gzip"}, msg_body: "" }
-remote: [stage-4] Expected content length 9, got 10
-remote: [stage-4] Test failed (try setting 'debug: true' in your codecrafters.yml to see more details)
-remote:
-*/

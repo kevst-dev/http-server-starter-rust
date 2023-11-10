@@ -40,7 +40,7 @@ impl HttpResponse {
                 let mut headers = HashMap::new();
                 headers.insert(
                     "Content-type".to_string(),
-                    "text/html".to_string()
+                    "text/html".to_string(),
                 );
 
                 Some(headers)
@@ -68,16 +68,27 @@ impl HttpResponse {
         Ok(())
     }
 
-    fn version(&self) -> String { self.version.to_string() }
-    fn status_code(&self) -> String { self.status_code.to_string() }
-    fn status_text(&self) -> String { self.status_text.to_string() }
+    #[allow(dead_code)]
+    fn version(&self) -> String {
+        self.version.to_string()
+    }
+
+    #[allow(dead_code)]
+    fn status_code(&self) -> String {
+        self.status_code.to_string()
+    }
+
+    #[allow(dead_code)]
+    fn status_text(&self) -> String {
+        self.status_text.to_string()
+    }
 
     fn headers(&self) -> String {
         match &self.headers {
             Some(map) => {
                 let header_string: String = map
                     .iter()
-                    .map(|(k, v)| format!("{}:{}\r\n", k, v))
+                    .map(|(k, v)| format!("{}: {}\r\n", k, v))
                     .collect();
 
                 header_string
@@ -95,7 +106,7 @@ impl HttpResponse {
 }
 
 impl From<HttpResponse> for String {
-   fn from(response: HttpResponse) -> String {
+    fn from(response: HttpResponse) -> String {
         format!(
             "{} {} {}\r\n{}Content-Length: {}\r\n\r\n{}",
             response.version,
@@ -128,9 +139,7 @@ mod tests {
         let status_code = "200";
         let body = "Item was shipped on 21st Dec 2020";
         let mut headers = HashMap::new();
-        headers.insert(
-            "Content-type".to_string(), "text/plain".to_string()
-        );
+        headers.insert("Content-type".to_string(), "text/plain".to_string());
 
         let expected_response = HttpResponse {
             version: "HTTP/1.1".to_string(),
@@ -154,9 +163,7 @@ mod tests {
         let status_code = "404";
         let body = "Item was shipped on 21st Dec 2020";
         let mut headers = HashMap::new();
-        headers.insert(
-            "Content-type".to_string(), "text/html".to_string()
-        );
+        headers.insert("Content-type".to_string(), "text/html".to_string());
 
         let expected_response = HttpResponse {
             version: "HTTP/1.1".to_string(),
@@ -166,11 +173,8 @@ mod tests {
             body: Some(body.to_string()),
         };
 
-        let response = HttpResponse::new(
-            status_code,
-            None,
-            Some(body.to_string()),
-        );
+        let response =
+            HttpResponse::new(status_code, None, Some(body.to_string()));
         assert_eq!(response, expected_response);
     }
 
@@ -179,14 +183,12 @@ mod tests {
         let status_code = "200";
         let body = "Item was shipped on 21st Dec 2020";
         let mut headers = HashMap::new();
-        headers.insert(
-            "Content-type".to_string(), "text/plain".to_string()
-        );
+        headers.insert("Content-type".to_string(), "text/plain".to_string());
 
         let response = HttpResponse::new(
             status_code,
             Some(headers.clone()),
-            Some(body.to_string())
+            Some(body.to_string()),
         );
 
         let mut output: Vec<u8> = Vec::new();

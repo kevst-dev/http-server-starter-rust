@@ -1,3 +1,5 @@
+use crate::url_path::UrlPath;
+
 // Representa el método HTTP de una solicitud.
 #[derive(Debug, PartialEq)]
 pub enum HttpMethod {
@@ -36,21 +38,16 @@ impl From<&str> for HttpVersion {
 
 use std::collections::HashMap;
 
-#[derive(Debug, PartialEq)]
-pub enum Resource {
-    Path(String),
-}
-
 #[derive(Debug)]
 pub struct HttpRequest {
     pub method: HttpMethod,
     pub version: HttpVersion,
-    pub resource: Resource,
+    pub resource: UrlPath,
     pub headers: HashMap<String, String>,
     pub msg_body: String,
 }
 
-fn process_req_line(line_request: &str) -> (HttpMethod, Resource, HttpVersion) {
+fn process_req_line(line_request: &str) -> (HttpMethod, UrlPath, HttpVersion) {
     // Divide la línea de solicitud en palabras separadas por espacios
     let mut words = line_request.split_whitespace();
 
@@ -65,7 +62,7 @@ fn process_req_line(line_request: &str) -> (HttpMethod, Resource, HttpVersion) {
 
     (
         HttpMethod::from(method.trim()),
-        Resource::Path(resource.to_string()),
+        UrlPath::new(resource),
         HttpVersion::from(version.trim()),
     )
 }
@@ -94,7 +91,7 @@ impl From<String> for HttpRequest {
     fn from(request: String) -> Self {
         let mut parsed_method = HttpMethod::Uninitialized;
         let mut parsed_version = HttpVersion::V1_1;
-        let mut parsed_resource = Resource::Path("".to_string());
+        let mut parsed_resource = UrlPath::new("");
         let mut parsed_headers = HashMap::new();
         let mut parsed_msg_body = "";
 
@@ -164,7 +161,7 @@ mod tests {
 
         assert_eq!(HttpMethod::Get, request.method);
         assert_eq!(HttpVersion::V1_1, request.version);
-        assert_eq!(Resource::Path("/".to_string()), request.resource);
+        assert_eq!("/", request.resource.to_string());
         assert_eq!(headers_expected, request.headers);
         assert_eq!("", request.msg_body);
     }
@@ -189,7 +186,7 @@ mod tests {
 
         assert_eq!(HttpMethod::Get, request.method);
         assert_eq!(HttpVersion::V1_1, request.version);
-        assert_eq!(Resource::Path("/greeting".to_string()), request.resource);
+        assert_eq!("/greeting", request.resource.to_string());
         assert_eq!(headers_expected, request.headers);
         assert_eq!("", request.msg_body);
     }
@@ -205,7 +202,7 @@ mod tests {
 
         assert_eq!(HttpMethod::Get, request.method);
         assert_eq!(HttpVersion::V1_1, request.version);
-        assert_eq!(Resource::Path("/api/data".to_string()), request.resource);
+        assert_eq!("/api/data", request.resource.to_string());
         assert_eq!(headers_expected, request.headers);
         assert_eq!("", request.msg_body);
     }
@@ -229,7 +226,7 @@ mod tests {
 
         assert_eq!(HttpMethod::Get, request.method);
         assert_eq!(HttpVersion::V1_1, request.version);
-        assert_eq!(Resource::Path("/data".to_string()), request.resource);
+        assert_eq!("/data", request.resource.to_string());
         assert_eq!(headers_expected, request.headers);
         assert_eq!("Hello, World!", request.msg_body);
     }
@@ -246,7 +243,7 @@ mod tests {
 
         assert_eq!(HttpMethod::Post, request.method);
         assert_eq!(HttpVersion::V1_1, request.version);
-        assert_eq!(Resource::Path("/".to_string()), request.resource);
+        assert_eq!("/", request.resource.to_string());
         assert_eq!(headers_expected, request.headers);
         assert_eq!("", request.msg_body);
     }
@@ -271,7 +268,7 @@ mod tests {
 
         assert_eq!(HttpMethod::Post, request.method);
         assert_eq!(HttpVersion::V1_1, request.version);
-        assert_eq!(Resource::Path("/greeting".to_string()), request.resource);
+        assert_eq!("/greeting", request.resource.to_string());
         assert_eq!(headers_expected, request.headers);
         assert_eq!("", request.msg_body);
     }
@@ -287,7 +284,7 @@ mod tests {
 
         assert_eq!(HttpMethod::Post, request.method);
         assert_eq!(HttpVersion::V1_1, request.version);
-        assert_eq!(Resource::Path("/api/data".to_string()), request.resource);
+        assert_eq!("/api/data", request.resource.to_string());
         assert_eq!(headers_expected, request.headers);
         assert_eq!("", request.msg_body);
     }
@@ -311,7 +308,8 @@ mod tests {
 
         assert_eq!(HttpMethod::Post, request.method);
         assert_eq!(HttpVersion::V1_1, request.version);
-        assert_eq!(Resource::Path("/data".to_string()), request.resource);
+        assert_eq!("/data", request.resource.to_string());
+        assert_eq!(headers_expected, request.headers);
         assert_eq!(headers_expected, request.headers);
         assert_eq!("Hello, World!", request.msg_body);
     }
