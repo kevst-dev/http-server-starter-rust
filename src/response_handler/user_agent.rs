@@ -9,7 +9,7 @@ pub struct UserAgentHandler;
 impl Handler for UserAgentHandler {
     fn handle(request: &HttpRequest) -> HttpResponse {
         let status_code = "200";
-        let body = request.headers.get("User-Agent").unwrap();
+        let body = request.headers.get("User-Agent").unwrap().trim();
         let mut headers = HashMap::new();
         headers.insert("Content-type".to_string(), "text/plain".to_string());
 
