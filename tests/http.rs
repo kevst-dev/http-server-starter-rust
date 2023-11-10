@@ -1,6 +1,6 @@
 use std::process::Command;
 
-use http_rs::http_request::{HttpMethod, HttpRequest};
+use http_server_starter_rust::http_request::{HttpMethod, HttpRequest};
 
 fn define_curl_cli(args: Vec<&str>) -> Command {
     let mut curl_command = Command::new("curl");

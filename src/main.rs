@@ -3,11 +3,17 @@ use std::net::{TcpListener, TcpStream};
 use std::str::FromStr;
 
 mod errors;
+mod http_request;
+mod http_response;
+mod parse_url;
+mod response_handler;
+mod router;
+mod url_path;
 
-use http_rs::http_request::HttpRequest;
+use http_request::HttpRequest;
 
-use http_rs::parse_url::ParseUrl;
-use http_rs::router::Router;
+use parse_url::ParseUrl;
+use router::Router;
 
 fn handle_client(mut stream: TcpStream) {
     let mut reader = BufReader::new(&stream);
