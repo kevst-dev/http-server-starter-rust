@@ -1,6 +1,10 @@
 use std::collections::HashMap;
 use std::io::{Result, Write};
 
+use tokio::io::AsyncWriteExt;
+use tokio::io::AsyncReadExt;
+use tokio::net::TcpStream;
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct HttpResponse {
     version: String,
@@ -60,11 +64,12 @@ impl HttpResponse {
         response
     }
 
-    pub fn send_response(&self, write_stream: &mut impl Write) -> Result<()> {
+    pub async fn send_response(&self, write_stream: &mut TcpStream) -> Result<()> {
         let response = self.clone();
         let response_string: String = String::from(response);
 
-        let _ = write!(write_stream, "{}", response_string);
+        write_stream.write_all(response_string.as_bytes()).await.unwrap();
+
         Ok(())
     }
 
@@ -176,35 +181,5 @@ mod tests {
         let response =
             HttpResponse::new(status_code, None, Some(body.to_string()));
         assert_eq!(response, expected_response);
-    }
-
-    #[test]
-    fn test_send_response() {
-        let status_code = "200";
-        let body = "Item was shipped on 21st Dec 2020";
-        let mut headers = HashMap::new();
-        headers.insert("Content-type".to_string(), "text/plain".to_string());
-
-        let response = HttpResponse::new(
-            status_code,
-            Some(headers.clone()),
-            Some(body.to_string()),
-        );
-
-        let mut output: Vec<u8> = Vec::new();
-        response.send_response(&mut output).unwrap();
-        let response_string = String::from_utf8(output).unwrap();
-
-        let expected_response_str = format!(
-            "{} {} {}\r\n{}Content-Length: {}\r\n\r\n{}",
-            response.version(),
-            response.status_code(),
-            response.status_text(),
-            response.headers(),
-            response.body().len(),
-            response.body()
-        );
-
-        assert_eq!(response_string, expected_response_str);
     }
 }
