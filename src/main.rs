@@ -1,8 +1,9 @@
-use std::io::{BufRead, BufReader};
 use std::str::FromStr;
+use std::sync::Arc;
+use std::path::PathBuf;
 
-use tokio::net::{TcpListener, TcpStream};
 use tokio::io::AsyncReadExt;
+use tokio::net::{TcpListener, TcpStream};
 
 mod errors;
 mod http_request;
@@ -18,43 +19,62 @@ use router::Router;
 
 const BUFFER_SIZE: usize = 255;
 
-async fn handle_client(mut stream: TcpStream) -> Result<(), String>{
+async fn handle_client(mut stream: TcpStream, path_dir: PathBuf) -> Result<(), String> {
     let mut buffer = vec![0; BUFFER_SIZE];
 
     match stream.read(&mut buffer).await {
-        Ok(bytes_read) =>{
-            let request = String::from_utf8(buffer.into_iter().take(bytes_read).collect())
-                .map_err(|e| format!("Error decoding UTF-8: {}", e))?;
+        Ok(bytes_read) => {
+            let request = String::from_utf8(
+                buffer.into_iter().take(bytes_read).collect(),
+            )
+            .map_err(|e| format!("Error decoding UTF-8: {}", e))?;
 
             let request = HttpRequest::from(request.to_string());
 
             println!("request: {:?}", request);
 
-            Router::route(request, &mut stream).await;
-
-        },
+            Router::route(request, &mut stream, path_dir).await;
+        }
         Err(e) => {
             return Err(format!("Failed to read data:{}", e));
         }
     };
 
     Ok(())
+}
 
-    /*
-    let mut reader = BufReader::new(&stream);
+fn parse_args(args: Vec<String>) -> PathBuf {
+    if args.len() != 3 {
+        panic!("Expected 2 arguments: <arg_flag> <arg_file>");
+    }
 
-    let bytes_request = reader.fill_buf().unwrap();
-    let request = String::from_utf8_lossy(bytes_request);
-    let request = HttpRequest::from(request.to_string());
+    let _bin_dir = &args[0];
+    let arg_flag = &args[1];
+    let arg_dir = &args[2];
 
-    println!("request: {:?}", request);
+    if arg_flag != "--directory" {
+        panic!("Expected --directory argument");
+    }
 
-    Router::route(request, &mut stream);
-    */
+    // convertir file en Path
+    let arg_dir = PathBuf::from_str(arg_dir).expect("Failed to parse file path");
+
+    if !arg_dir.is_dir() {
+        panic!("Expected directory path");
+    }
+
+    arg_dir
 }
 
 #[tokio::main]
 async fn main() {
+    // Read the --directory <directory> argument
+    let args: Vec<String> = std::env::args().collect();
+    let directory = parse_args(args);
+    let directory = Arc::new(directory);
+
+    println!("Directory: {:?}", &directory);
+
     println!("Server is starting...");
 
     let url = "127.0.0.1:4221/";
@@ -69,6 +89,8 @@ async fn main() {
     };
 
     loop {
+        let directory = Arc::clone(&directory);
+
         let (stream, addr) = match listener.accept().await {
             Ok((stream, addr)) => (stream, addr),
             Err(e) => {
@@ -81,11 +103,11 @@ async fn main() {
         println!("Accepting connection from {}", addr);
 
         tokio::spawn(async move {
-            if let Err(e) = handle_client(stream).await {
+            let directory = Arc::clone(&directory);
+
+            if let Err(e) = handle_client(stream, directory.to_path_buf()).await {
                 println!("Connection with {} failed: {}", addr, e);
-
             }
-
         });
     }
 }

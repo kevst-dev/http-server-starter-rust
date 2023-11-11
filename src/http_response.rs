@@ -1,8 +1,7 @@
 use std::collections::HashMap;
-use std::io::{Result, Write};
+use std::io::Result;
 
 use tokio::io::AsyncWriteExt;
-use tokio::io::AsyncReadExt;
 use tokio::net::TcpStream;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -11,7 +10,7 @@ pub struct HttpResponse {
     status_code: String,
     status_text: String,
     headers: Option<HashMap<String, String>>,
-    body: Option<String>,
+    body: Option<Vec<u8>>,
 }
 
 impl Default for HttpResponse {
@@ -30,7 +29,7 @@ impl HttpResponse {
     pub fn new(
         status_code: &str,
         headers: Option<HashMap<String, String>>,
-        body: Option<String>,
+        body: Option<&[u8]>,
     ) -> HttpResponse {
         let mut response: HttpResponse = HttpResponse::default();
 
@@ -59,16 +58,23 @@ impl HttpResponse {
             _ => "Not Found".to_string(),
         };
 
-        response.body = body;
+        response.body = body.map(|b| b.to_vec());
 
         response
     }
 
-    pub async fn send_response(&self, write_stream: &mut TcpStream) -> Result<()> {
+    pub async fn send_response(
+        &self,
+        write_stream: &mut TcpStream,
+    ) -> Result<()> {
         let response = self.clone();
-        let response_string: String = String::from(response);
+        let response_bytes = Vec::<u8>::from(response); 
+        // let response_string: String = String::from(response);
 
-        write_stream.write_all(response_string.as_bytes()).await.unwrap();
+        write_stream
+            .write_all(response_bytes.as_slice())
+            .await
+            .unwrap();
 
         Ok(())
     }
@@ -102,16 +108,17 @@ impl HttpResponse {
         }
     }
 
-    pub fn body(&self) -> String {
+    pub fn body(&self) -> Vec<u8> {
         match &self.body {
-            Some(b) => b.to_string(),
-            None => "".to_string(),
+            Some(b) => b.clone(),
+            None => Vec::new(),
         }
     }
 }
 
-impl From<HttpResponse> for String {
-    fn from(response: HttpResponse) -> String {
+impl From<HttpResponse> for Vec<u8> {
+    fn from(response: HttpResponse) -> Vec<u8> {
+        /*
         format!(
             "{} {} {}\r\n{}Content-Length: {}\r\n\r\n{}",
             response.version,
@@ -121,6 +128,34 @@ impl From<HttpResponse> for String {
             response.body().len(),
             response.body(),
         )
+        */
+        let mut result = Vec::new();
+
+        result.extend_from_slice(response.version.as_bytes());
+        result.extend_from_slice(b" ");
+        result.extend_from_slice(response.status_code.as_bytes());
+        result.extend_from_slice(b" ");
+        result.extend_from_slice(response.status_text.as_bytes());
+        result.extend_from_slice(b"\r\n");
+
+        if let Some(headers) = &response.headers {
+            for (key, value) in headers {
+                result.extend_from_slice(key.as_bytes());
+                result.extend_from_slice(b": ");
+                result.extend_from_slice(value.as_bytes());
+                result.extend_from_slice(b"\r\n");
+            }
+        }
+        result.extend_from_slice(b"Content-Length: ");
+        result.extend_from_slice(response.body().len().to_string().as_bytes());
+
+        result.extend_from_slice(b"\r\n\r\n");
+        
+        if let Some(body) = &response.body {
+            result.extend_from_slice(body);
+        }
+
+        result
     }
 }
 
@@ -151,13 +186,13 @@ mod tests {
             status_code: status_code.to_string(),
             status_text: "OK".to_string(),
             headers: Some(headers.clone()),
-            body: Some(body.to_string()),
+            body: Some(body.as_bytes().to_vec()),
         };
 
         let response = HttpResponse::new(
             status_code,
             Some(headers.clone()),
-            Some(body.to_string()),
+            Some(body.as_bytes()),
         );
 
         assert_eq!(response, expected_response);
@@ -175,11 +210,11 @@ mod tests {
             status_code: status_code.to_string(),
             status_text: "Not Found".to_string(),
             headers: Some(headers.clone()),
-            body: Some(body.to_string()),
+            body: Some(body.as_bytes().to_vec()),
         };
 
         let response =
-            HttpResponse::new(status_code, None, Some(body.to_string()));
+            HttpResponse::new(status_code, None, Some(body.as_bytes()));
         assert_eq!(response, expected_response);
     }
 }

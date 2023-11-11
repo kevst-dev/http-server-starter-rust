@@ -17,6 +17,7 @@ impl UrlPath {
         UrlPath { path, data }
     }
 
+    //  function name starts_with is more semantic
     pub fn path(&self) -> String {
         if self.path.is_empty() {
             return "/".to_string();
