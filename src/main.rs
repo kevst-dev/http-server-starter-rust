@@ -44,6 +44,7 @@ async fn handle_client(mut stream: TcpStream, path_dir: PathBuf) -> Result<(), S
 }
 
 fn parse_args(args: Vec<String>) -> PathBuf {
+    println!("args: {:?}", args);
     if args.len() < 2 {
         panic!("Expected 2 arguments: <arg_flag> <arg_file>");
     }
