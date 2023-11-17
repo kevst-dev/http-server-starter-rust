@@ -1,6 +1,6 @@
+use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Arc;
-use std::path::PathBuf;
 
 use tokio::io::AsyncReadExt;
 use tokio::net::{TcpListener, TcpStream};
@@ -17,21 +17,19 @@ use http_request::HttpRequest;
 use parse_url::ParseUrl;
 use router::Router;
 
-const BUFFER_SIZE: usize = 255;
+const BUFFER_SIZE: usize = 1024 * 8;
 
-async fn handle_client(mut stream: TcpStream, path_dir: PathBuf) -> Result<(), String> {
+async fn handle_client(
+    mut stream: TcpStream,
+    path_dir: PathBuf,
+) -> Result<(), String> {
     let mut buffer = vec![0; BUFFER_SIZE];
 
     match stream.read(&mut buffer).await {
         Ok(bytes_read) => {
-            let request = String::from_utf8(
-                buffer.into_iter().take(bytes_read).collect(),
-            )
-            .map_err(|e| format!("Error decoding UTF-8: {}", e))?;
-
+            let request = String::from_utf8_lossy(&buffer[0..bytes_read])
+                .trim_end_matches(char::from(0)).to_string();
             let request = HttpRequest::from(request.to_string());
-
-            println!("request: {:?}", request);
 
             Router::route(request, &mut stream, path_dir).await;
         }
@@ -44,7 +42,6 @@ async fn handle_client(mut stream: TcpStream, path_dir: PathBuf) -> Result<(), S
 }
 
 fn parse_args(args: Vec<String>) -> PathBuf {
-    println!("args: {:?}", args);
     if args.len() < 2 {
         return PathBuf::from(".");
     }
@@ -58,7 +55,8 @@ fn parse_args(args: Vec<String>) -> PathBuf {
     }
 
     // convertir file en Path
-    let arg_dir = PathBuf::from_str(arg_dir).expect("Failed to parse file path");
+    let arg_dir =
+        PathBuf::from_str(arg_dir).expect("Failed to parse file path");
 
     if !arg_dir.is_dir() {
         panic!("Expected directory path");
@@ -106,7 +104,8 @@ async fn main() {
         tokio::spawn(async move {
             let directory = Arc::clone(&directory);
 
-            if let Err(e) = handle_client(stream, directory.to_path_buf()).await {
+            if let Err(e) = handle_client(stream, directory.to_path_buf()).await
+            {
                 println!("Connection with {} failed: {}", addr, e);
             }
         });

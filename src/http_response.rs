@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt::Write;
 use std::io::Result;
 
 use tokio::io::AsyncWriteExt;
@@ -68,7 +69,7 @@ impl HttpResponse {
         write_stream: &mut TcpStream,
     ) -> Result<()> {
         let response = self.clone();
-        let response_bytes = Vec::<u8>::from(response); 
+        let response_bytes = Vec::<u8>::from(response);
         // let response_string: String = String::from(response);
 
         write_stream
@@ -97,10 +98,10 @@ impl HttpResponse {
     fn headers(&self) -> String {
         match &self.headers {
             Some(map) => {
-                let header_string: String = map
-                    .iter()
-                    .map(|(k, v)| format!("{}: {}\r\n", k, v))
-                    .collect();
+                let mut header_string = String::new();
+                for (k, v) in map {
+                    write!(header_string, "{}: {}\r\n", k, v).unwrap();
+                }
 
                 header_string
             }
@@ -150,7 +151,7 @@ impl From<HttpResponse> for Vec<u8> {
         result.extend_from_slice(response.body().len().to_string().as_bytes());
 
         result.extend_from_slice(b"\r\n\r\n");
-        
+
         if let Some(body) = &response.body {
             result.extend_from_slice(body);
         }

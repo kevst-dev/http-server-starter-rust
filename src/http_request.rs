@@ -1,7 +1,7 @@
 use crate::url_path::UrlPath;
 
 // Representa el método HTTP de una solicitud.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum HttpMethod {
     Get,
     Post,
@@ -20,7 +20,7 @@ impl From<&str> for HttpMethod {
 }
 
 // Representa la versión de protocolo HTTP de una solicitud.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum HttpVersion {
     V1_1,
     // Version no inicializada o desconocida
@@ -38,13 +38,13 @@ impl From<&str> for HttpVersion {
 
 use std::collections::HashMap;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct HttpRequest {
     pub method: HttpMethod,
     pub version: HttpVersion,
     pub resource: UrlPath,
     pub headers: HashMap<String, String>,
-    pub msg_body: String,
+    pub body: Option<Vec<u8>>,
 }
 
 fn process_req_line(line_request: &str) -> (HttpMethod, UrlPath, HttpVersion) {
@@ -89,11 +89,14 @@ fn process_header_line(line_request: &str) -> (String, String) {
 
 impl From<String> for HttpRequest {
     fn from(request: String) -> Self {
+        println!("{}", request);
+
         let mut parsed_method = HttpMethod::Uninitialized;
         let mut parsed_version = HttpVersion::V1_1;
         let mut parsed_resource = UrlPath::new("");
         let mut parsed_headers = HashMap::new();
-        let mut parsed_msg_body = "";
+        let mut parsed_body = Vec::new();
+        let mut is_body = false;
 
         // Lee cada línea en la solicitud HTTP entrante
         for line in request.lines() {
@@ -104,23 +107,35 @@ impl From<String> for HttpRequest {
                         process_req_line(line);
                 }
                 // Si es una línea de encabezado
-                line if line.contains(':') => {
+                line if line.contains(':') && !is_body => {
                     let (key, value) = process_header_line(line);
                     parsed_headers.insert(key, value);
                 }
                 // Si es una línea en blanco: no haggis nada
-                line if line.is_empty() => (),
+                line if line.is_empty() => {
+                    is_body = true;
+                },
                 // Si no tiene coincidencia: es el cuerpo del mensaje
-                _ => parsed_msg_body = line,
+                _ if is_body => {
+                    parsed_body.append(&mut line.as_bytes().to_vec());
+                    parsed_body.append(&mut "\n".as_bytes().to_vec());
+                }
+                _ => (),
             }
         }
+
+        let parsed_body = if parsed_body.last().is_none() {
+            None
+        } else {
+            Some(parsed_body)
+        };
 
         HttpRequest {
             method: parsed_method,
             version: parsed_version,
             resource: parsed_resource,
             headers: parsed_headers,
-            msg_body: parsed_msg_body.to_string(),
+            body: parsed_body,
         }
     }
 }
@@ -163,7 +178,7 @@ mod tests {
         assert_eq!(HttpVersion::V1_1, request.version);
         assert_eq!("/", request.resource.to_string());
         assert_eq!(headers_expected, request.headers);
-        assert_eq!("", request.msg_body);
+        assert!(request.body.is_none());
     }
 
     #[test]
@@ -188,7 +203,7 @@ mod tests {
         assert_eq!(HttpVersion::V1_1, request.version);
         assert_eq!("/greeting", request.resource.to_string());
         assert_eq!(headers_expected, request.headers);
-        assert_eq!("", request.msg_body);
+        assert!(request.body.is_none());
     }
 
     #[test]
@@ -204,7 +219,7 @@ mod tests {
         assert_eq!(HttpVersion::V1_1, request.version);
         assert_eq!("/api/data", request.resource.to_string());
         assert_eq!(headers_expected, request.headers);
-        assert_eq!("", request.msg_body);
+        assert!(request.body.is_none());
     }
 
     #[test]
@@ -228,7 +243,9 @@ mod tests {
         assert_eq!(HttpVersion::V1_1, request.version);
         assert_eq!("/data", request.resource.to_string());
         assert_eq!(headers_expected, request.headers);
-        assert_eq!("Hello, World!", request.msg_body);
+
+        let body = String::from_utf8(request.body.unwrap()).unwrap();
+        assert_eq!("Hello, World!", body);
     }
 
     // POST
@@ -245,7 +262,7 @@ mod tests {
         assert_eq!(HttpVersion::V1_1, request.version);
         assert_eq!("/", request.resource.to_string());
         assert_eq!(headers_expected, request.headers);
-        assert_eq!("", request.msg_body);
+        assert!(request.body.is_none());
     }
 
     #[test]
@@ -270,7 +287,7 @@ mod tests {
         assert_eq!(HttpVersion::V1_1, request.version);
         assert_eq!("/greeting", request.resource.to_string());
         assert_eq!(headers_expected, request.headers);
-        assert_eq!("", request.msg_body);
+        assert!(request.body.is_none());
     }
 
     #[test]
@@ -286,7 +303,7 @@ mod tests {
         assert_eq!(HttpVersion::V1_1, request.version);
         assert_eq!("/api/data", request.resource.to_string());
         assert_eq!(headers_expected, request.headers);
-        assert_eq!("", request.msg_body);
+        assert!(request.body.is_none());
     }
 
     #[test]
@@ -311,6 +328,8 @@ mod tests {
         assert_eq!("/data", request.resource.to_string());
         assert_eq!(headers_expected, request.headers);
         assert_eq!(headers_expected, request.headers);
-        assert_eq!("Hello, World!", request.msg_body);
+
+        let body = String::from_utf8(request.body.unwrap()).unwrap();
+        assert_eq!("Hello, World!", body);
     }
 }

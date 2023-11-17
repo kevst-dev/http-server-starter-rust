@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::fs;
+use std::path::PathBuf;
 
 use nom::AsBytes;
 
@@ -21,11 +21,14 @@ impl Handler<PathBuf> for GetFileHandler {
                 let status_code = "200";
                 let body = file.as_bytes();
                 let mut headers = HashMap::new();
-                headers.insert("Content-type".to_string(), "application/octet-stream".to_string());
+                headers.insert(
+                    "Content-type".to_string(),
+                    "application/octet-stream".to_string(),
+                );
 
                 HttpResponse::new(status_code, Some(headers), Some(body))
-            },
-            Err(_) => { PathNotFoundHandler::handle(&request, ()) }
+            }
+            Err(_) => PathNotFoundHandler::handle(request, ()),
         };
 
         http_response

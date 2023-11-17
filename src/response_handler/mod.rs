@@ -19,3 +19,6 @@ pub use user_agent::UserAgentHandler;
 
 mod get_file;
 pub use get_file::GetFileHandler;
+
+mod post_file;
+pub use post_file::PostFileHandler;
