@@ -5,7 +5,7 @@ use reqwest::Client;
 
 #[tokio::test]
 async fn test_http_status_code_404() {
-    let data_array = ["data.xml", "error", "not-found"];
+    let data_array = ["data.xml", "error", "not-found", "Horsey/Horsey-scooby"];
     let host = String::from("http://localhost:4221");
 
     // Para cada dato en el array, realizar una solicitud HTTP

@@ -23,7 +23,13 @@ async fn test_http_server_status_code_200() {
 
 #[tokio::test]
 async fn test_http_server_command_echo() {
-    let data_array = ["", "linux", "Coo/dooby", "monkey/Coo-donkey"];
+    let data_array = [
+        "",
+        "linux",
+        "Coo/dooby",
+        "monkey/Coo-donkey",
+        "monkey/monkey-237",
+    ];
     let host = String::from("http://localhost:4221");
 
     // Para cada dato en el array, realizar una solicitud HTTP
@@ -49,7 +55,7 @@ async fn test_http_server_command_echo() {
 
 #[tokio::test]
 async fn test_http_server_command_user_agent() {
-    let users_agents = ["curl/7.68.0", "Mozilla/5.0", "Linux"];
+    let users_agents = ["curl/7.68.0", "Mozilla/5.0", "Linux", "Monkey/Horsey"];
     let http_client = Client::new();
 
     for user_agent in &users_agents {

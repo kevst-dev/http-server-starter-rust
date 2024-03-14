@@ -51,6 +51,7 @@ pub struct RequestLine {
 }
 
 impl RequestLine {
+    #[allow(dead_code)]
     pub fn new(method: &str, uri: &str, http_version: &str) -> RequestLine {
         RequestLine {
             method: HttpMethod::from(method),
@@ -78,6 +79,7 @@ impl HttpRequest {
     pub fn method(&self) -> &HttpMethod {
         &self.request_line.method
     }
+    #[allow(dead_code)]
     pub fn version(&self) -> &HttpVersion {
         &self.request_line.http_version
     }
