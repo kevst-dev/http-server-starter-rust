@@ -119,17 +119,6 @@ impl HttpResponse {
 
 impl From<HttpResponse> for Vec<u8> {
     fn from(response: HttpResponse) -> Vec<u8> {
-        /*
-        format!(
-            "{} {} {}\r\n{}Content-Length: {}\r\n\r\n{}",
-            response.version,
-            response.status_code,
-            response.status_text,
-            response.headers(),
-            response.body().len(),
-            response.body(),
-        )
-        */
         let mut result = Vec::new();
 
         result.extend_from_slice(response.version.as_bytes());

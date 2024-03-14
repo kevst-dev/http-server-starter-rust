@@ -6,14 +6,12 @@ use tokio::io::AsyncReadExt;
 use tokio::net::{TcpListener, TcpStream};
 
 mod errors;
-mod http_request;
-mod http_response;
 mod parse_url;
 mod response_handler;
 mod router;
-mod url_path;
+mod http;
 
-use http_request::HttpRequest;
+use http::HttpRequest;
 use parse_url::ParseUrl;
 use router::Router;
 
@@ -27,10 +25,7 @@ async fn handle_client(
 
     match stream.read(&mut buffer).await {
         Ok(bytes_read) => {
-            let request = String::from_utf8_lossy(&buffer[0..bytes_read])
-                .trim_end_matches(char::from(0))
-                .to_string();
-            let request = HttpRequest::from(request.to_string());
+            let request = HttpRequest::from(&buffer[0..bytes_read]);
 
             Router::route(request, &mut stream, path_dir).await;
         }

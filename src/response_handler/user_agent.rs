@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use crate::http_request::HttpRequest;
-use crate::http_response::HttpResponse;
+use crate::http::HttpRequest;
+use crate::http::HttpResponse;
 use crate::response_handler::Handler;
 
 pub struct UserAgentHandler;

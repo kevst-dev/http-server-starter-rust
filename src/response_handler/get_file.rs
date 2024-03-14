@@ -4,8 +4,8 @@ use std::path::PathBuf;
 
 use nom::AsBytes;
 
-use crate::http_request::HttpRequest;
-use crate::http_response::HttpResponse;
+use crate::http::HttpRequest;
+use crate::http::HttpResponse;
 use crate::response_handler::Handler;
 use crate::response_handler::PathNotFoundHandler;
 
@@ -13,7 +13,7 @@ pub struct GetFileHandler;
 
 impl Handler<PathBuf> for GetFileHandler {
     fn handle(request: &HttpRequest, path_dir: PathBuf) -> HttpResponse {
-        let file_name = request.resource.data();
+        let file_name = request.uri().data();
         let path_file = path_dir.join(file_name);
 
         let http_response: HttpResponse = match fs::read(path_file) {

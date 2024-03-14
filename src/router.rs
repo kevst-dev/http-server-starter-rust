@@ -1,5 +1,5 @@
-use crate::http_request::{HttpMethod, HttpRequest};
-use crate::http_response::HttpResponse;
+use crate::http::{HttpMethod, HttpRequest};
+use crate::http::HttpResponse;
 use crate::response_handler;
 use crate::response_handler::Handler;
 
@@ -14,7 +14,7 @@ impl Router {
         stream: &mut TcpStream,
         path_dir: PathBuf,
     ) {
-        match request.method {
+        match request.method() {
             HttpMethod::Get => {
                 Self.route_get(request, stream, path_dir).await;
             }
@@ -35,7 +35,7 @@ impl Router {
         stream: &mut TcpStream,
         path_dir: PathBuf,
     ) {
-        match request.resource.path().as_str() {
+        match request.uri().path().as_str() {
             "/" => {
                 let response: HttpResponse =
                     response_handler::PathDefaultHandler::handle(&request, ());
@@ -77,7 +77,7 @@ impl Router {
         stream: &mut TcpStream,
         path_dir: PathBuf,
     ) {
-        match request.resource.path().as_str() {
+        match request.uri().path().as_str() {
             "/files" => {
                 let response: HttpResponse =
                     response_handler::PostFileHandler::handle(

@@ -6,3 +6,6 @@ pub use uri_path::UriPath;
 
 mod request;
 pub use request::{HttpMethod, HttpRequest, HttpVersion, RequestLine};
+
+mod response;
+pub use response::HttpResponse;

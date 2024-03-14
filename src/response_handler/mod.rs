@@ -1,5 +1,5 @@
-use crate::http_request::HttpRequest;
-use crate::http_response::HttpResponse;
+use crate::http::HttpRequest;
+use crate::http::HttpResponse;
 
 pub trait Handler<OptionalPath> {
     fn handle(request: &HttpRequest, path: OptionalPath) -> HttpResponse;
