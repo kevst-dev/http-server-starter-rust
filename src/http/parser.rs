@@ -4,8 +4,10 @@ pub use crate::http::{HttpMethod, HttpRequest, HttpVersion, RequestLine};
 use winnow::prelude::*;
 use winnow::token::{take_until0, take_while};
 use winnow::{ascii::line_ending, combinator::repeat};
+use winnow::error::ErrMode;
 
 use std::collections::HashMap;
+use std::str;
 
 // ---- -- HTTP Version -- ---- \\
 
@@ -48,7 +50,16 @@ fn request_line(input: &mut &[u8]) -> PResult<RequestLine> {
     let uri = http_uri(input)?;
     let _ = take_while(1.., is_space).parse_next(input)?;
     let http_version = http_version(input)?;
-    let _ = line_ending.parse_next(input)?;
+
+   // Verificar si los primeros dos bytes son "\r\n"
+    if let Some(first_two_bytes) = input.get(..2) {
+        if first_two_bytes == b"\r\n" {
+            let _ = line_ending.parse_next(input)?;
+        }
+    } else {
+        // None
+    }
+
 
     Ok(RequestLine {
         method,
@@ -90,13 +101,17 @@ fn parse_request_metadata(
 ) -> PResult<(RequestLine, HashMap<String, String>)> {
     let request_line = request_line(input)?;
 
+    println!("ERR_2 {:?}", input);
+
     let mut headers_hash: HashMap<String, String> = HashMap::new();
 
-    let headers: Vec<(String, String)> =
-        repeat(1.., message_header).parse_next(input)?;
-    headers.iter().for_each(|(key, value)| {
-        headers_hash.insert(key.clone(), value.clone());
-    });
+    if !input.is_empty() {
+        let headers: Vec<(String, String)> =
+            repeat(1.., message_header).parse_next(input)?;
+        headers.iter().for_each(|(key, value)| {
+            headers_hash.insert(key.clone(), value.clone());
+        });
+    }
 
     Ok((request_line, headers_hash))
 }
@@ -111,6 +126,7 @@ pub fn parse_request(input: &mut &[u8]) -> PResult<HttpRequest> {
     let mut line_blank = "\r\n\r\n";
 
     let mut request = take_until0(line_blank).parse_next(input)?;
+    println!("ERR {:?}", str::from_utf8(request));
     let (request_line, headers) = parse_request_metadata(&mut request).unwrap();
 
     // Eliminar cualquier espacio en blanco o saltos de línea adicionales
@@ -386,5 +402,28 @@ mod tests {
         assert_eq!(sorted_headers_expected, request_headers);
 
         assert!(request.body.is_none());
+    }
+
+    #[test]
+    fn test_complex_request_http_get_empty_request() {
+        let request_lines = [
+            "GET / HTTP/1.1",
+            "\r\n",
+            "",
+        ];
+        let plain_request: String = request_lines.join("\r\n");
+
+        let expect_request_line = RequestLine {
+            method: HttpMethod::Get,
+            uri: UriPath::new("/"),
+            http_version: HttpVersion::V1_1,
+        };
+
+        let request = parse_request(&mut plain_request.as_bytes()).unwrap();
+
+        assert_eq!(expect_request_line, request.request_line);
+
+        assert!(request.body.is_none());
+
     }
 }

@@ -120,9 +120,8 @@ mod tests {
     // GET
 
     #[test]
-    #[ignore]
     fn test_read_http_get_empty_request() {
-        let plain_request: String = String::from("GET / HTTP/1.1\n \r\n\r\n");
+        let plain_request: String = String::from("GET / HTTP/1.1\r\n\r\n");
 
         let headers_expected = HashMap::new();
 
@@ -170,7 +169,6 @@ mod tests {
         assert!(request.body.is_none());
     }
 
-    #[ignore]
     #[test]
     fn test_read_http_get_without_headers() {
         let request_lines = ["GET /api/data HTTP/1.1", "\r\n"];
@@ -227,7 +225,6 @@ mod tests {
 
     // POST
 
-    #[ignore]
     #[test]
     fn test_read_http_post_empty_request() {
         let plain_request: String = String::from("POST / HTTP/1.1\r\n\r\n");
@@ -280,7 +277,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_read_http_post_without_headers() {
         let request_lines = ["POST /api/data HTTP/1.1", "\r\n"];
         let plain_request: String = request_lines.join("\r\n");
