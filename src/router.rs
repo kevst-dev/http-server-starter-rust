@@ -1,5 +1,5 @@
-use crate::http::{HttpMethod, HttpRequest};
 use crate::http::HttpResponse;
+use crate::http::{HttpMethod, HttpRequest};
 use crate::response_handler;
 use crate::response_handler::Handler;
 

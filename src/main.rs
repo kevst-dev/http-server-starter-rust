@@ -6,10 +6,10 @@ use tokio::io::AsyncReadExt;
 use tokio::net::{TcpListener, TcpStream};
 
 mod errors;
+mod http;
 mod parse_url;
 mod response_handler;
 mod router;
-mod http;
 
 use http::HttpRequest;
 use parse_url::ParseUrl;
