@@ -11,7 +11,7 @@ test *args:
 
 pre-commit:
     cargo fmt --all
-    cargo clippy --fix --allow-dirty --tests -- -D clippy::all
+    cargo clippy --fix --allow-dirty --allow-staged --tests -- -D clippy::all
 
     pre-commit install
     pre-commit run --all-files

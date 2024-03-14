@@ -28,7 +28,8 @@ async fn handle_client(
     match stream.read(&mut buffer).await {
         Ok(bytes_read) => {
             let request = String::from_utf8_lossy(&buffer[0..bytes_read])
-                .trim_end_matches(char::from(0)).to_string();
+                .trim_end_matches(char::from(0))
+                .to_string();
             let request = HttpRequest::from(request.to_string());
 
             Router::route(request, &mut stream, path_dir).await;

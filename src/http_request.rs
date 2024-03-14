@@ -89,8 +89,6 @@ fn process_header_line(line_request: &str) -> (String, String) {
 
 impl From<String> for HttpRequest {
     fn from(request: String) -> Self {
-        println!("{}", request);
-
         let mut parsed_method = HttpMethod::Uninitialized;
         let mut parsed_version = HttpVersion::V1_1;
         let mut parsed_resource = UrlPath::new("");
@@ -114,7 +112,7 @@ impl From<String> for HttpRequest {
                 // Si es una línea en blanco: no haggis nada
                 line if line.is_empty() => {
                     is_body = true;
-                },
+                }
                 // Si no tiene coincidencia: es el cuerpo del mensaje
                 _ if is_body => {
                     parsed_body.append(&mut line.as_bytes().to_vec());
@@ -228,8 +226,8 @@ mod tests {
             "GET /data HTTP/1.1",
             "Host: example.com",
             "Content-Length: 15",
-            "Hello, World!",
             "\r\n",
+            "Hello, World!",
         ];
         let plain_request: String = request_lines.join("\r\n");
 
@@ -245,7 +243,7 @@ mod tests {
         assert_eq!(headers_expected, request.headers);
 
         let body = String::from_utf8(request.body.unwrap()).unwrap();
-        assert_eq!("Hello, World!", body);
+        assert_eq!("Hello, World!\n", body);
     }
 
     // POST
@@ -312,8 +310,8 @@ mod tests {
             "POST /data HTTP/1.1",
             "Host: example.com",
             "Content-Length: 15",
-            "Hello, World!",
             "\r\n",
+            "Hello, World!",
         ];
         let plain_request: String = request_lines.join("\r\n");
 
@@ -330,6 +328,6 @@ mod tests {
         assert_eq!(headers_expected, request.headers);
 
         let body = String::from_utf8(request.body.unwrap()).unwrap();
-        assert_eq!("Hello, World!", body);
+        assert_eq!("Hello, World!\n", body);
     }
 }

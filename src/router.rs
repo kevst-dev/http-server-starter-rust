@@ -17,10 +17,10 @@ impl Router {
         match request.method {
             HttpMethod::Get => {
                 Self.route_get(request, stream, path_dir).await;
-            },
+            }
             HttpMethod::Post => {
                 Self.route_post(request, stream, path_dir).await;
-            },
+            }
             _ => {
                 let response: HttpResponse =
                     response_handler::PathNotFoundHandler::handle(&request, ());

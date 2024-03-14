@@ -1,130 +1,67 @@
-use std::process::Command;
+use std::fs;
+use std::path::Path;
 
-use http_server_starter_rust::http_request::{HttpMethod, HttpRequest};
+use reqwest::Client;
 
-fn define_curl_cli(args: Vec<&str>) -> Command {
-    let mut curl_command = Command::new("curl");
+#[tokio::test]
+async fn test_http_status_code_404() {
+    let data_array = ["data.xml", "error", "not-found"];
+    let host = String::from("http://localhost:4221");
 
-    let mut combined_args = vec!["-v"];
-    combined_args.extend(args.iter().cloned());
+    // Para cada dato en el array, realizar una solicitud HTTP
+    for data in &data_array {
+        let url = format!("{}/{}", host, data);
 
-    curl_command.args(combined_args);
-    curl_command
-}
+        let http_client = Client::new();
+        let response = http_client.get(&url).send().await.unwrap();
 
-fn format_stdout(output: String) -> (String, String) {
-    // Limpia y formatea la información innecesaria
-    // de la salida del comando curl.
+        assert_eq!(response.status(), 404);
 
-    fn clean_lines(lines: &str, prefix: char) -> String {
-        lines
-            .lines()
-            .filter(|line| line.starts_with(prefix))
-            .map(|line| {
-                let mut cleaned_line = line.to_string();
-                cleaned_line.remove(0); // Remove the prefix character
-                cleaned_line.remove(0); // Remove the space
-                cleaned_line
-            })
-            .collect::<Vec<String>>()
-            .join("\r\n")
+        assert_eq!(response.headers()["content-type"], "text/plain");
+        assert_eq!(response.headers()["content-length"], "39");
+
+        let body = response.text().await.unwrap();
+        assert_eq!(body, "No existe el recurso que ha sido pedido");
     }
-
-    let request = clean_lines(&output, '>');
-    let response = clean_lines(&output, '<');
-
-    (format!("{}\r\n", request), response)
 }
 
-#[test]
-fn test_http_status_code_200_none_path() {
-    let args = vec!["http://localhost:4221/"];
-    let mut curl_cli = define_curl_cli(args);
+// Ejecuta el servidor como 'just run -- --directory tests/data'
+#[tokio::test]
+async fn test_http_server_command_post_files() {
+    let this_file = file!();
+    let this_file = std::path::Path::new(this_file);
+    let folder = this_file.parent().unwrap().join("data");
 
-    let output = curl_cli.output().unwrap();
-    let stderr = String::from_utf8_lossy(&output.stderr);
+    let file_name = "index.html";
+    let file_path = folder.join(file_name);
+    let file_name_result = "index_test.html";
+    let host = String::from("http://localhost:4221");
+    let url = format!("{}/files/{}", host, file_name_result);
 
-    let (request, response) = format_stdout(stderr.to_string());
-    let request = HttpRequest::from(request.clone());
+    // Lee el contenido del archivo y conviértelo en bytes
+    let file_content = fs::read(file_path).unwrap();
 
-    assert_eq!(HttpMethod::Get, request.method);
-    assert_eq!(request.resource.to_string(), "/");
+    let http_client = Client::new();
+    let response = http_client
+        .post(&url)
+        .body(file_content)
+        .send()
+        .await
+        .unwrap();
 
-    assert!(response.contains("HTTP/1.1 200 OK"));
-    assert!(response.contains("Content-type: text/plain"));
-    assert!(response.contains("Content-Length: 37"));
-}
+    assert_eq!(response.status(), 201);
 
-#[test]
-fn test_http_status_code_200_echo_path_1() {
-    let args = vec!["http://localhost:4221/echo/linux"];
-    let mut curl_cli = define_curl_cli(args);
+    assert_eq!(
+        response.headers()["content-type"],
+        "application/octet-stream"
+    );
+    assert_eq!(
+        response.headers()["content-length"],
+        file_name.len().to_string()
+    );
 
-    let output = curl_cli.output().unwrap();
-    let stderr = String::from_utf8_lossy(&output.stderr);
+    let result_path = folder.join(file_name_result);
+    assert!(Path::new(&result_path).exists());
 
-    let (request, response) = format_stdout(stderr.to_string());
-    let request = HttpRequest::from(request.clone());
-
-    assert_eq!(HttpMethod::Get, request.method);
-    assert_eq!(request.resource.to_string(), "/echo/linux");
-
-    assert!(response.contains("HTTP/1.1 200 OK"));
-    assert!(response.contains("Content-type: text/plain"));
-    assert!(response.contains("Content-Length: 5"));
-}
-
-#[test]
-fn test_http_status_code_200_echo_path_2() {
-    let args = vec!["http://localhost:4221/echo/monkey/Coo-donkey"];
-    let mut curl_cli = define_curl_cli(args);
-
-    let output = curl_cli.output().unwrap();
-    let stderr = String::from_utf8_lossy(&output.stderr);
-
-    let (request, response) = format_stdout(stderr.to_string());
-    let request = HttpRequest::from(request.clone());
-
-    assert_eq!(HttpMethod::Get, request.method);
-    assert_eq!(request.resource.to_string(), "/echo/monkey/Coo-donkey");
-
-    assert!(response.contains("HTTP/1.1 200 OK"));
-    assert!(response.contains("Content-type: text/plain"));
-    assert!(response.contains("Content-Length: 17"));
-}
-
-#[test]
-fn test_http_status_code_200_echo_path_3() {
-    let args = vec!["http://localhost:4221/echo/Coo/dooby"];
-    let mut curl_cli = define_curl_cli(args);
-
-    let output = curl_cli.output().unwrap();
-    let stderr = String::from_utf8_lossy(&output.stderr);
-
-    let (request, response) = format_stdout(stderr.to_string());
-    let request = HttpRequest::from(request.clone());
-
-    assert_eq!(HttpMethod::Get, request.method);
-    assert_eq!(request.resource.to_string(), "/echo/Coo/dooby");
-
-    assert!(response.contains("HTTP/1.1 200 OK"));
-    assert!(response.contains("Content-type: text/plain"));
-    assert!(response.contains("Content-Length: 9"));
-}
-
-#[test]
-fn test_http_status_code_404() {
-    let args = vec!["-X", "POST", "http://localhost:4221/data.xml"];
-    let mut curl_cli = define_curl_cli(args);
-
-    let output = curl_cli.output().unwrap();
-    let stderr = String::from_utf8_lossy(&output.stderr);
-
-    let (request, response) = format_stdout(stderr.to_string());
-    let request = HttpRequest::from(request.clone());
-
-    assert_eq!(HttpMethod::Post, request.method);
-    assert!(response.contains("HTTP/1.1 404 Not Found"));
-    assert!(response.contains("Content-type: text/plain"));
-    assert!(response.contains("Content-Length: 39"));
+    fs::remove_file(&result_path).unwrap();
 }
