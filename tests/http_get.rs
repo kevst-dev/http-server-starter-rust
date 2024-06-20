@@ -59,9 +59,14 @@ async fn test_http_server_command_user_agent() {
     let http_client = Client::new();
 
     for user_agent in &users_agents {
+        println!("User-Agent: {}", user_agent);
+        let http_client = Client::builder()
+            .user_agent(*user_agent)
+            .build()
+            .unwrap();
+
         let response = http_client
             .get("http://localhost:4221/user-agent")
-            .header("User-Agent", *user_agent)
             .send()
             .await
             .unwrap();
