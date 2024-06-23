@@ -88,6 +88,7 @@ impl HttpRequest {
         let headers_response = HashMap::new();
 
         println!("AA {:?}", self.headers);
+        println!("AA {:?}", SUPPORTED_ENCODEING);
 
         headers_response
     }
