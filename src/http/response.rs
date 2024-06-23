@@ -95,6 +95,7 @@ impl HttpResponse {
         self.status_text.to_string()
     }
 
+    #[allow(dead_code)]
     fn headers(&self) -> String {
         match &self.headers {
             Some(map) => {

@@ -87,9 +87,7 @@ impl HttpRequest {
 
 impl From<&[u8]> for HttpRequest {
     fn from(request: &[u8]) -> Self {
-        let mut request = request;
-
-        parse_request(&mut request).unwrap()
+        parse_request(request).unwrap()
     }
 }
 
@@ -207,8 +205,6 @@ mod tests {
         sorted_headers_expected.sort();
 
         let request = HttpRequest::from(plain_request.as_bytes());
-
-        println!("{:?}", request);
 
         assert_eq!(HttpMethod::Get, request.method().clone());
         assert_eq!(HttpVersion::V1_1, request.version().clone());
