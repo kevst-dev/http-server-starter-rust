@@ -8,9 +8,11 @@ pub struct EchoHandler;
 
 impl Handler<()> for EchoHandler {
     fn handle(request: &HttpRequest, _path: ()) -> HttpResponse {
+        println!("{:?}", request);
         let status_code = "200";
         let body = request.uri().data();
-        let mut headers = HashMap::new();
+
+        let mut headers = request.get_headers_for_the_response();
         headers.insert("Content-type".to_string(), "text/plain".to_string());
 
         HttpResponse::new(status_code, Some(headers), Some(body.as_bytes()))

@@ -1,4 +1,4 @@
-use crate::http::{parse_request, UriPath};
+use crate::http::{parse_request, UriPath, SUPPORTED_ENCODEING};
 
 // ---- -- HTTP Method -- ---- \\
 
@@ -82,6 +82,14 @@ impl HttpRequest {
     #[allow(dead_code)]
     pub fn version(&self) -> &HttpVersion {
         &self.request_line.http_version
+    }
+
+    pub fn get_headers_for_the_response(&self) -> HashMap<String, String> {
+        let headers_response = HashMap::new();
+
+        println!("AA {:?}", self.headers);
+
+        headers_response
     }
 }
 
