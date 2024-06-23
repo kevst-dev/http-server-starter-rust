@@ -53,6 +53,7 @@ impl HttpResponse {
 
         response.status_text = match response.status_code.as_str() {
             "200" => "OK".to_string(),
+            "201" => "Created".to_string(),
             "400" => "Bad Request".to_string(),
             "404" => "Not Found".to_string(),
             "500" => "Internal Server Error".to_string(),

@@ -10,6 +10,9 @@ pub struct PostFileHandler;
 
 impl Handler<PathBuf> for PostFileHandler {
     fn handle(request: &HttpRequest, path_dir: PathBuf) -> HttpResponse {
+        println!("AA {:?}", request);
+        println!("BB {:?}", request.uri());
+
         let body = String::from_utf8(request.clone().body.unwrap());
         let file_name = request.uri().data();
         let path_file = path_dir.join(file_name);
@@ -18,13 +21,13 @@ impl Handler<PathBuf> for PostFileHandler {
         fs::write(path_file, body.unwrap()).unwrap();
 
         let status_code = "201";
-        let body = "file saved".as_bytes();
+        // let body = "C".as_bytes();
         let mut headers = HashMap::new();
         headers.insert(
             "Content-type".to_string(),
             "application/octet-stream".to_string(),
         );
 
-        HttpResponse::new(status_code, Some(headers), Some(body))
+        HttpResponse::new(status_code, Some(headers), None)
     }
 }
