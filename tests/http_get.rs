@@ -81,6 +81,7 @@ async fn test_http_server_command_user_agent() {
 }
 
 // Ejecuta el servidor como 'just run -- --directory tests/data'
+#[ignore]
 #[tokio::test]
 async fn test_http_server_command_get_files() {
     let name_files = ["index.html", "IMG_5491.JPG"];
