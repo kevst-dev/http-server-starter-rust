@@ -1,4 +1,7 @@
 use reqwest::Client;
+use flate2::read::GzDecoder;
+
+use std::io::Read;
 
 /*
 * Comprueba que el servidor responde al comando 'echo'
@@ -85,13 +88,14 @@ async fn test_http_get_command_echo_with_accept_encoding_valid() {
         assert_eq!(response.status(), 200);
 
         assert_eq!(response.headers()["content-type"], "text/plain");
-        assert_eq!(
-            response.headers()["content-length"],
-            data.len().to_string()
-        );
         assert_eq!(response.headers()["content-encoding"], "gzip");
 
-        let body = response.text().await.unwrap();
+        // decodificando el body, que viene en gzip
+        let body_bytes = response.bytes().await.unwrap();
+        let mut decoder = GzDecoder::new(&body_bytes[..]);
+        let mut body = String::new();
+        decoder.read_to_string(&mut body).unwrap();
+
         assert_eq!(body, *data);
     }
 }
