@@ -6,7 +6,6 @@ use flate2::Compression;
 use flate2::write::GzEncoder;
 
 use std::io::Write;
-use std::io::Read;
 
 pub struct EchoHandler;
 
