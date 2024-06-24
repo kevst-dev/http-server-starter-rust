@@ -85,12 +85,28 @@ impl HttpRequest {
     }
 
     pub fn get_headers_for_the_response(&self) -> HashMap<String, String> {
-        let headers_response = HashMap::new();
+        let mut headers_response = HashMap::new();
 
-        println!("AA {:?}", self.headers);
-        println!("AA {:?}", SUPPORTED_ENCODEING);
+        self.add_accept_encoding_header(&mut headers_response);
 
         headers_response
+    }
+
+    fn add_accept_encoding_header(&self, headers_response: &mut HashMap<String, String>) {
+        for (header, value) in &self.headers {
+            if header.to_lowercase() == "accept-encoding" {
+                for encoding in SUPPORTED_ENCODEING {
+                    if value == encoding {
+                        // La cabecera Content-Encoding solo se
+                        // agrega si el tipo de codificación está
+                        // soportado por el servidor
+                        headers_response.insert(
+                            String::from("Content-Encoding"), String::from(encoding)
+                        );
+                    }
+                }
+            }
+        }
     }
 }
 

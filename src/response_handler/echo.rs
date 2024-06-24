@@ -6,7 +6,6 @@ pub struct EchoHandler;
 
 impl Handler<()> for EchoHandler {
     fn handle(request: &HttpRequest, _path: ()) -> HttpResponse {
-        println!("{:?}", request);
         let status_code = "200";
         let body = request.uri().data();
 
