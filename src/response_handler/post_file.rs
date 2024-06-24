@@ -10,9 +10,6 @@ pub struct PostFileHandler;
 
 impl Handler<PathBuf> for PostFileHandler {
     fn handle(request: &HttpRequest, path_dir: PathBuf) -> HttpResponse {
-        println!("AA {:?}", request);
-        println!("BB {:?}", request.uri());
-
         let body = String::from_utf8(request.clone().body.unwrap());
         let file_name = request.uri().data();
         let path_file = path_dir.join(file_name);

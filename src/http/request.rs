@@ -95,8 +95,10 @@ impl HttpRequest {
     fn add_accept_encoding_header(&self, headers_response: &mut HashMap<String, String>) {
         for (header, value) in &self.headers {
             if header.to_lowercase() == "accept-encoding" {
-                for encoding in SUPPORTED_ENCODEING {
-                    if value == encoding {
+                let encodings: Vec<&str> = value.split(',').map(|s| s.trim()).collect();
+
+                for encoding in encodings {
+                    if SUPPORTED_ENCODEING.contains(&encoding) {
                         // La cabecera Content-Encoding solo se
                         // agrega si el tipo de codificación está
                         // soportado por el servidor
@@ -105,6 +107,7 @@ impl HttpRequest {
                         );
                     }
                 }
+
             }
         }
     }

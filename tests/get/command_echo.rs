@@ -79,7 +79,7 @@ async fn test_http_get_command_echo_with_accept_encoding_valid() {
 
         let response = http_client
             .get(&url)
-            .header("Accept-Encoding", "gzip")
+            .header("Accept-Encoding", "none, gzip, invalid")
             .send().await.unwrap();
 
         assert_eq!(response.status(), 200);
@@ -127,7 +127,7 @@ async fn test_http_get_command_echo_with_accept_encoding_invalid() {
 
         let response = http_client
             .get(&url)
-            .header("Accept-Encoding", "invalid")
+            .header("Accept-Encoding", "invalid, none")
             .send().await.unwrap();
 
         assert_eq!(response.status(), 200);
