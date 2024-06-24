@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::http::HttpRequest;
 use crate::http::HttpResponse;
 use crate::response_handler::Handler;

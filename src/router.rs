@@ -4,8 +4,10 @@ use crate::response_handler;
 use crate::response_handler::Handler;
 
 use std::path::PathBuf;
+
 use tokio::net::TcpStream;
 
+#[derive(Debug)]
 pub struct Router;
 
 impl Router {
@@ -78,6 +80,13 @@ impl Router {
         path_dir: PathBuf,
     ) {
         match request.uri().path().as_str() {
+            "/" => {
+                let response: HttpResponse =
+                    response_handler::PathDefaultHandler::handle(&request, ());
+
+                response.send_response(stream).await.unwrap();
+            }
+
             "/files" => {
                 let response: HttpResponse =
                     response_handler::PostFileHandler::handle(

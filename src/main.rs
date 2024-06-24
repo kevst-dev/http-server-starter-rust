@@ -69,7 +69,6 @@ async fn main() {
     let directory = Arc::new(directory);
 
     println!("Directory: {:?}", &directory);
-
     println!("Server is starting...");
 
     let url = "127.0.0.1:4221/";
